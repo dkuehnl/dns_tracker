@@ -7,7 +7,7 @@
 struct Options {
     QString dns_type;
     QString dns_server;
-    QString dns_request;
+    QString dns_name;
     bool verbose = false;
     bool continue_measurment = false;
     bool show_help = false;
@@ -22,6 +22,9 @@ public:
 
 private:
     Options m_options;
+
+    void run_lookup();
+    void analyze_lookup();
 };
 
 

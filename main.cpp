@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     static struct option long_opts[] = {
         {"dns_type", required_argument, nullptr, 't'},
         {"dns_server", required_argument, nullptr, 's'},
-        {"dns_request", required_argument, nullptr, 'n'},
+        {"dns_name", required_argument, nullptr, 'n'},
         {"verbose", no_argument, nullptr, 'v'},
         {"continue", no_argument, nullptr, 'c'},
         {"help", no_argument, nullptr, 'h'},
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
             opts.dns_server = optarg;
             break;
         case 'n':
-            opts.dns_request = optarg;
+            opts.dns_name = optarg;
             break;
         case 'v':
             opts.verbose = true;
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (opts.show_help || opts.dns_type.isEmpty() || opts.dns_request.isEmpty() || opts.dns_server.isEmpty()) {
+    if (opts.show_help || opts.dns_type.isEmpty() || opts.dns_name.isEmpty() || opts.dns_server.isEmpty()) {
         print_help();
         return !opts.show_help;
     }
