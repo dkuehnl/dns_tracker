@@ -1,0 +1,36 @@
+#include <QCoreApplication>
+#include <QDnsLookup>
+#include <QHostAddress>
+#include <QCryptographicHash>
+
+namespace Hashing {
+
+    static QString normalize_name(const QString &name) {
+        QString s = name.trimmed().toLower();
+        if (s.endsWith('.')) s.chop(1);
+        return s;
+    }
+
+    QByteArray hash_a_record(const QList<QDnsHostAddressRecord>& record) {
+        QVector<QString> parts;
+        parts.reserve(record.size());
+        for (const auto& rec : record) {
+            QString name = normalize_name(rec.name());
+            QString target = rec.value().toString();
+            parts << QString("%1|%2").arg(name, target);
+        }
+
+        std::sort(parts.begin(), parts.end());
+        QByteArray joined_parts;
+        for (const auto& p : parts) {
+            joined_parts.append(p.toUtf8());
+            joined_parts.append('\n');
+        }
+        return QCryptographicHash::hash(joined_parts, QCryptographicHash::Md5);
+    }
+
+    QByteArray hash_srv_record(const QList<QDnsServiceRecord>& record) {
+
+    }
+
+}

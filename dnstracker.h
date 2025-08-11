@@ -24,6 +24,7 @@
 
 #include <qobject.h>
 #include <QCoreApplication>
+#include <QDnsLookup>
 
 struct Options {
     QString dns_type;
@@ -45,9 +46,17 @@ public slots:
 
 private:
     Options m_options;
+    QList<QDnsHostAddressRecord> m_prev_a_record;
+    QList<QDnsHostAddressRecord> m_cur_a_record;
+    QList<QDnsServiceRecord> m_prev_srv_record;
+    QList<QDnsServiceRecord> m_cur_srv_record;
 
     void run_lookup();
-    void analyze_lookup();
+    void start_tracking();
+    void display_lookup();
+    bool analyze_srv();
+    bool analyze_a();
+
 };
 
 
