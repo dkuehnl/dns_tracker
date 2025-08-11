@@ -15,7 +15,8 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Network)
 add_executable(dns_tracker
   main.cpp
   dnstracker.h dnstracker.cpp
-  hashing.cpp
+  hashing.h hashing.cpp
+
 )
 target_link_libraries(dns_tracker Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Network)
 

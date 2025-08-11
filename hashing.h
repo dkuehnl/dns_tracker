@@ -1,7 +1,10 @@
 #ifndef HASHING_H
 #define HASHING_H
 
+#include <QCoreApplication>
+#include <QDnsLookup>
 
+namespace Hashing {
 
 
 static QString normalize_name(const QString &name);

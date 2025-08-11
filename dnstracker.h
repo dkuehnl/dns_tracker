@@ -46,16 +46,17 @@ public slots:
 
 private:
     Options m_options;
-    QList<QDnsHostAddressRecord> m_prev_a_record;
-    QList<QDnsHostAddressRecord> m_cur_a_record;
-    QList<QDnsServiceRecord> m_prev_srv_record;
-    QList<QDnsServiceRecord> m_cur_srv_record;
+    qint64 m_start_time;
+    QByteArray m_prev_a_record;
+    QByteArray m_cur_a_record;
+    QByteArray m_prev_srv_record;
+    QByteArray m_cur_srv_record;
 
     void run_lookup();
     void start_tracking();
     void display_lookup();
-    bool analyze_srv();
-    bool analyze_a();
+    bool compare_srv();
+    bool compare_a();
 
 };
 
