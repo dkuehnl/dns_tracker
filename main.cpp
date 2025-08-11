@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
         return !opts.show_help;
     }
 
+    //Using Qt-Event-Loop only because of the conviniend QLookUp-Class
     QCoreApplication app(argc, argv);
     DnsTracker tracker(opts);
 
