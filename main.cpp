@@ -19,6 +19,7 @@
 #include <getopt.h>
 
 #include <QCoreApplication>
+#include <QTimer>
 
 #include "dnstracker.h"
 
@@ -85,7 +86,9 @@ int main(int argc, char *argv[])
 
     //Using Qt-Event-Loop only because of the conviniend QLookUp-Class
     QCoreApplication app(argc, argv);
+
     DnsTracker tracker(opts);
+    QTimer::singleShot(0, &tracker, SLOT(start()));
 
     return app.exec();
 }

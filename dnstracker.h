@@ -36,10 +36,12 @@ struct Options {
 
 class DnsTracker : public QObject {
     Q_OBJECT
-    Options opts;
 
 public:
     DnsTracker(const Options& o);
+
+public slots:
+    void start();
 
 private:
     Options m_options;
