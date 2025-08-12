@@ -47,7 +47,6 @@ void DnsTracker::start() {
 }
 
 void DnsTracker::run_lookup() {
-    std::cout << "run lookup erreicht" << std::endl;
     if (m_dns) {
         m_dns->deleteLater();
     }
@@ -58,7 +57,7 @@ void DnsTracker::run_lookup() {
         m_dns = new QDnsLookup(QDnsLookup::Type(QDnsLookup::A), m_options.dns_name, this);
     } else {
         std::cerr << "DNS-Type " << m_options.dns_type.toStdString() << " is not supported!!" << std::endl;
-        QCoreApplication::quit();
+        QCoreApplication::exit(1);
         return;
     }
 
@@ -86,12 +85,21 @@ void DnsTracker::display_lookup() {
 
     std::cout << "Requested" << "\t" << "TTL" << "\t" << "Priority" << "\t" << "Target" << std::endl;
     if (m_options.dns_type.toUpper() == "SRV") {
-        for (const auto& rec : m_dns->serviceRecords()) {
-            std::cout << rec.name().toStdString() << "\t" << rec.timeToLive() << "\t" << rec.priority() << "\t" << rec.target().toStdString() << std::endl;
+        const auto records = m_dns->serviceRecords();
+        for (const auto& rec : records) {
+            std::cout << rec.name().toStdString()
+                      << "\t" << rec.timeToLive()
+                      << "\t" << rec.priority()
+                      << "\t" << rec.target().toStdString()
+                      << std::endl;
         }
     } else if (m_options.dns_type.toUpper() == "A") {
-        for (const auto& rec : m_dns->hostAddressRecords()) {
-            std::cout << rec.name().toStdString() << "\t" << rec.timeToLive() << "\t\t" << rec.value().toString().toStdString() << std::endl;
+        const auto records = m_dns->hostAddressRecords();
+        for (const QDnsHostAddressRecord& rec : records) {
+            std::cout << rec.name().toStdString()
+                      << "\t" << rec.timeToLive()
+                      << "\t\t" << rec.value().toString().toStdString()
+                      << std::endl;
         }
     } else {
         std::cerr << "not supported type" << std::endl;
@@ -115,57 +123,101 @@ void DnsTracker::start_tracking() {
         return;
     }
 
-    bool has_changed = false;
+    bool hash_changed = false;
     if (m_options.dns_type.toUpper() == "SRV") {
 
-        m_cur_srv_record = Hashing::hash_srv_record(m_dns->serviceRecords());
-        has_changed = DnsTracker::compare_srv();
+        m_cur_srv_response = m_dns->serviceRecords();
+        m_cur_srv_hash = Hashing::hash_srv_record(m_dns->serviceRecords());
+        hash_changed = DnsTracker::compare_srv();
 
         if (m_options.verbose) {
-            for (const auto& record : m_dns->serviceRecords()) {
+            const auto records = m_dns->serviceRecords();
+            for (const auto& record : records) {
                 std::cout << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString() << "\t"
                           << record.name().toStdString() << "\t"
                           << record.target().toStdString() << "\t"
                           << record.priority() << std::endl;
             }
             std::cout << std::endl;
+        } else if (!m_options.verbose & !hash_changed) {
+            std::cout << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString() << "\t"
+                      << "No Change detected"
+                      << std::endl;
         }
     } else if (m_options.dns_type.toUpper() == "A") {
 
-        m_cur_a_record = Hashing::hash_a_record(m_dns->hostAddressRecords());
-        has_changed = DnsTracker::compare_a();
+        m_cur_a_response = m_dns->hostAddressRecords();
+        m_cur_a_hash = Hashing::hash_a_record(m_dns->hostAddressRecords());
+        hash_changed = DnsTracker::compare_a();
 
         if (m_options.verbose) {
-            for (const auto& record : m_dns->hostAddressRecords()) {
+            const auto records = m_dns->hostAddressRecords();
+            for (const auto& record : records) {
                 std::cout << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString() << "\t"
                           << record.name().toStdString() << "\t"
                           << record.value().toString().toStdString() << std::endl;
             }
+        } else if (!m_options.verbose & !hash_changed) {
+            std::cout << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString() << "\t"
+                      << "No Change detected"
+                      << std::endl;
         }
     }
 
-    if (has_changed) {
-        std::cout << "has changed" << std::endl;
-        //Wenn gleich:
-        //Loop stoppen
-        //Zeit von Start bis Änderung berechnen
-        //Ergebnis anzeigen
-        //Programm beenden
-        QCoreApplication::quit();
+    if (hash_changed) {
+        qint64 end_time = QDateTime::currentMSecsSinceEpoch();
+        std::cout << "----------------------------------------------------------------------" << std::endl;
+        std::cout << "DNS-response for "
+                  << m_options.dns_name.toStdString()
+                  << "has changed at: "
+                  << QDateTime::fromMSecsSinceEpoch(end_time).toString(Qt::ISODate).toStdString()
+                  << std::endl;
+        std::cout << "For DNS-server: " << m_options.dns_server.toStdString() << std::endl;
+        if (m_options.verbose) {
+            std::cout << "From: ";
+            if (m_options.dns_type.toUpper() == "SRV") {
+                const auto& prev_srv_response = m_prev_srv_response;
+                for (const auto& response : prev_srv_response) {
+                    std::cout << response.target().toStdString() << " (Prio: " << response.priority() << ")" << std::endl;
+                }
+                std::cout << "To: ";
+                const auto& cur_srv_response = m_cur_srv_response;
+                for (const auto& response : cur_srv_response) {
+                    std::cout << response.target().toStdString() << " (Prio: " << response.priority() << ")" << std::endl;
+                }
+            } else if (m_options.dns_type.toUpper() == "A") {
+                const auto& prev_a_response = m_prev_a_response;
+                for (const auto& response : prev_a_response) {
+                    std::cout << "\t" << response.value().toString().toStdString() << std::endl;
+                }
+                std::cout << "To: ";
+                const auto& cur_a_response = m_cur_a_response;
+                for (const auto& response : cur_a_response) {
+                    std::cout << "\t" << response.value().toString().toStdString() << std::endl;
+                }
+            }
+        }
+        qint64 duration = end_time - m_start_time;
+        QTime duration_time(0,0);
+        duration_time = duration_time.addMSecs(duration);
+        std::cout << "Duration of change since start of measurement: " << duration_time.toString("hh:mm:ss").toStdString() << std::endl;
+        QCoreApplication::exit(0);
         return;
     }
 
-    m_prev_a_record = m_cur_a_record;
-    m_prev_srv_record = m_cur_srv_record;
+    m_prev_a_hash = m_cur_a_hash;
+    m_prev_a_response = m_cur_a_response;
+    m_prev_srv_hash = m_cur_srv_hash;
+    m_prev_srv_response = m_cur_srv_response;
     QTimer::singleShot(SLEEP_INTERVALL, this, &DnsTracker::run_lookup);
 }
 
 bool DnsTracker::compare_srv() {
-    if (m_prev_srv_record.isEmpty()) {
+    if (m_prev_srv_hash.isEmpty()) {
         return false;
     }
 
-    if (m_prev_srv_record == m_cur_srv_record) {
+    if (m_prev_srv_hash == m_cur_srv_hash) {
         return false;
     } else {
         return true;
@@ -173,10 +225,10 @@ bool DnsTracker::compare_srv() {
 }
 
 bool DnsTracker::compare_a() {
-    if (m_prev_a_record.isEmpty()) {
+    if (m_prev_a_hash.isEmpty()) {
         return false;
     }
-    if (m_prev_a_record == m_cur_a_record) {
+    if (m_prev_a_hash == m_cur_a_hash) {
         return false;
     } else {
         return true;

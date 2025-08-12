@@ -46,13 +46,18 @@ public slots:
 
 private:
     QDnsLookup* m_dns = nullptr;
-
     Options m_options;
     qint64 m_start_time;
-    QByteArray m_prev_a_record;
-    QByteArray m_cur_a_record;
-    QByteArray m_prev_srv_record;
-    QByteArray m_cur_srv_record;
+
+    QByteArray m_prev_a_hash;
+    QList<QDnsHostAddressRecord> m_prev_a_response;
+    QByteArray m_cur_a_hash;
+    QList<QDnsHostAddressRecord> m_cur_a_response;
+
+    QByteArray m_prev_srv_hash;
+    QList<QDnsServiceRecord> m_prev_srv_response;
+    QByteArray m_cur_srv_hash;
+    QList<QDnsServiceRecord> m_cur_srv_response;
 
     void run_lookup();
     void start_tracking();
