@@ -28,8 +28,9 @@
 
 struct Options {
     QString dns_type;
-    QString dns_server;
     QString dns_name;
+    QString dns_server;
+    QList<QString> multi_dns_server;
     bool verbose = false;
     bool continue_measurment = false;
     bool show_help = false;
