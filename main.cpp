@@ -30,7 +30,8 @@ void print_help() {
     std::cout << std::endl;
     std::cout << "Mandatory arguments are labled with *" << std::endl;
     std::cout << "\t*-t DNS-TYPE (NAPTR, SRV, A)" << std::endl;
-    std::cout << "\t*-s DNS-SERVER (IP-address)" << std::endl;
+    std::cout << "\t*-s DNS-SERVER (IP-address, obsolet if -m is set)" << std::endl;
+    std::cout << "\t*-m [List of Servers]" << std::endl;
     std::cout << "\t*-n DNS-NAME" << std::endl;
     std::cout << "\t[-c continues-measurment, pulls request every 30 seconds]" << std::endl;
     std::cout << "\t[-v verbose-mode]" << std::endl;
@@ -40,11 +41,12 @@ void print_help() {
 int main(int argc, char *argv[])
 {
     Options opts;
-    const char* short_opts = "t:s:n:vch";
+    const char* short_opts = "t:s:n:m:vch";
     static struct option long_opts[] = {
         {"dns_type", required_argument, nullptr, 't'},
         {"dns_server", required_argument, nullptr, 's'},
         {"dns_name", required_argument, nullptr, 'n'},
+        {"multi_server", required_argument, nullptr, 'm'},
         {"verbose", no_argument, nullptr, 'v'},
         {"continue", no_argument, nullptr, 'c'},
         {"help", no_argument, nullptr, 'h'},
@@ -63,6 +65,13 @@ int main(int argc, char *argv[])
         case 'n':
             opts.dns_name = optarg;
             break;
+        case 'm':
+            opts.multi_dns_server.push_back(optarg);
+            while (optind < argc && opts.multi_dns_server.size() <=5 && argv[optind][0] != '-') {
+                opts.multi_dns_server.push_back(argv[optind]);
+                ++optind;
+            }
+            break;
         case 'v':
             opts.verbose = true;
             break;
@@ -74,14 +83,25 @@ int main(int argc, char *argv[])
             break;
         case '?':
         default:
-            std::cout << "help gesetzt" << std::endl;
+            print_help();
             return 1;
         }
     }
 
-    if (opts.show_help || opts.dns_type.isEmpty() || opts.dns_name.isEmpty() || opts.dns_server.isEmpty()) {
+    if (opts.show_help || opts.dns_type.isEmpty() || opts.dns_name.isEmpty()) {
         print_help();
         return !opts.show_help;
+    }
+    if ((opts.dns_server.isEmpty() && opts.multi_dns_server.empty()) || (!opts.dns_server.isEmpty() && !opts.multi_dns_server.empty())) {
+        std::cerr << "Invalid input, only -s OR -m can be selected. See -h for more information" << std::endl;
+        return 1;
+    }
+
+    if (!opts.multi_dns_server.empty()) {
+        for (const auto& entry : opts.multi_dns_server) {
+            std::cout << "'" << entry.toStdString() << "'" << std::endl;
+        }
+        return 0;
     }
 
     //Using Qt-Event-Loop only because of the conviniend QLookUp-Class
