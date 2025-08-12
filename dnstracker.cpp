@@ -68,7 +68,8 @@ void DnsTracker::run_lookup() {
                   << m_options.dns_type.toStdString()
                   << " is not supported!"
                   << std::endl;
-        QCoreApplication::exit(1);
+        emit finished();
+        this->deleteLater();
         return;
     }
 
@@ -84,12 +85,14 @@ void DnsTracker::run_lookup() {
 void DnsTracker::display_lookup() {
     if (!m_dns) {
         std::cerr << "Unspecified error during dns-request." << std::endl;
-        QCoreApplication::exit(1);
+        emit finished();
+        this->deleteLater();
         return;
     }
     if (m_dns->error() != QDnsLookup::NoError) {
         std::cerr << "Error during DNS: " << m_dns->errorString().toStdString() << std::endl;
-        QCoreApplication::exit(1);
+        emit finished();
+        this->deleteLater();
         return;
     }
 
@@ -124,24 +127,28 @@ void DnsTracker::display_lookup() {
                   << " is not supported!"
                   << std::endl;
         m_dns->deleteLater();
-        QCoreApplication::exit(1);
+        emit finished();
+        this->deleteLater();
         return;
     }
 
     m_dns->deleteLater();
-    QCoreApplication::exit(0);
+    emit finished();
+    this->deleteLater();
     return;
 }
 
 void DnsTracker::start_tracking() {
     if (!m_dns) {
         std::cerr << "Unspecified error during dns-request." << std::endl;
-        QCoreApplication::exit(1);
+        emit finished();
+        this->deleteLater();
         return;
     }
     if (m_dns->error() != QDnsLookup::NoError) {
         std::cerr << "Error during DNS: " << m_dns->errorString().toStdString() << std::endl;
-        QCoreApplication::exit(1);
+        emit finished();
+        this->deleteLater();
         return;
     }
 
@@ -154,7 +161,8 @@ void DnsTracker::start_tracking() {
 
     if (hash_changed) {
         DnsTracker::display_summary(QDateTime::currentMSecsSinceEpoch());
-        QCoreApplication::exit(0);
+        emit finished();
+        this->deleteLater();
         return;
     }
 

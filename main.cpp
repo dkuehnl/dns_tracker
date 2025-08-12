@@ -100,11 +100,20 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
 
     QList<QString> dns_server = opts.multi_dns_server;
+    size_t active_trackers = dns_server.size();
     for (const auto& server : dns_server) {
         Options server_opts = opts;
         server_opts.dns_server = server;
 
         auto tracker = new DnsTracker(server_opts, &app);
+
+        QObject::connect(tracker, &DnsTracker::finished, [&]() {
+            active_trackers--;
+            if (active_trackers == 0) {
+                app.quit();
+            }
+        });
+
         QTimer::singleShot(0, tracker, [tracker]() {
             tracker->start();
         });

@@ -45,6 +45,9 @@ public:
 public slots:
     void start();
 
+signals:
+    void finished();
+
 private:
     QDnsLookup* m_dns = nullptr;
     Options m_options;
