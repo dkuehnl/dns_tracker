@@ -134,12 +134,11 @@ void DnsTracker::start_tracking() {
 
     if (hash_changed) {
         DnsTracker::display_summary(QDateTime::currentMSecsSinceEpoch());
+        QCoreApplication::exit(0);
+        return;
     }
 
-    m_prev_a_hash = m_cur_a_hash;
-    m_prev_a_response = m_cur_a_response;
-    m_prev_srv_hash = m_cur_srv_hash;
-    m_prev_srv_response = m_cur_srv_response;
+    DnsTracker::change_member_values();
     QTimer::singleShot(SLEEP_INTERVALL, this, &DnsTracker::run_lookup);
 }
 
@@ -147,7 +146,7 @@ void DnsTracker::display_summary(qint64 end_time) {
     std::cout << "----------------------------------------------------------------------" << std::endl;
     std::cout << "DNS-response for "
               << m_options.dns_name.toStdString()
-              << "has changed at: "
+              << " has changed at: "
               << QDateTime::fromMSecsSinceEpoch(end_time).toString(Qt::ISODate).toStdString()
               << std::endl;
     std::cout << "For DNS-server: " << m_options.dns_server.toStdString() << std::endl;
@@ -179,8 +178,6 @@ void DnsTracker::display_summary(qint64 end_time) {
     std::cout << "Duration of change since start of measurement: "
               << DnsTracker::calculate_delay(end_time).toString("hh:mm:ss").toStdString()
               << std::endl;
-    QCoreApplication::exit(0);
-    return;
 }
 
 QTime DnsTracker::calculate_delay(qint64 end_time) {
@@ -236,7 +233,6 @@ bool DnsTracker::compare_hash(const QByteArray& prev_hash, const QByteArray& cur
     if (prev_hash.isEmpty()) {
         return false;
     }
-
     if (prev_hash == cur_hash) {
         return false;
     } else {
@@ -244,3 +240,9 @@ bool DnsTracker::compare_hash(const QByteArray& prev_hash, const QByteArray& cur
     }
 }
 
+void DnsTracker::change_member_values() {
+    m_prev_a_hash = m_cur_a_hash;
+    m_prev_a_response = m_cur_a_response;
+    m_prev_srv_hash = m_cur_srv_hash;
+    m_prev_srv_response = m_cur_srv_response;
+}

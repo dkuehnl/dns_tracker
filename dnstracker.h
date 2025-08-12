@@ -63,7 +63,9 @@ private:
     void start_tracking();
     void display_lookup();
     void display_summary(qint64 end_time);
+    void change_member_values();
 
+    bool check_dns_response();
     bool analyze_srv();
     bool analyze_a();
     bool compare_hash(const QByteArray& prev_hash, const QByteArray& cur_hash);
