@@ -36,10 +36,19 @@ DnsTracker::DnsTracker(const Options& o) : m_options(o) {
 
 void DnsTracker::start() {
     if (m_options.continue_measurment) {
-        std::cout << "Measurement started at " << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString() << std::endl;
+        std::cout << "Measurement started at "
+                  << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString()
+                  << std::endl;
         m_start_time = QDateTime::currentMSecsSinceEpoch();
         if (m_options.verbose) {
-            std::cout << "Time" << "\t\t" << "Requested" << "\t" << "Target" << "\t" << "Priority" << std::endl;
+            std::cout << "Time"
+                      << "\t\t"
+                      << "Requested"
+                      << "\t"
+                      << "Target"
+                      << "\t"
+                      << "Priority"
+                      << std::endl;
         }
     }
     DnsTracker::run_lookup();
@@ -56,7 +65,10 @@ void DnsTracker::run_lookup() {
     } else if (m_options.dns_type.toUpper() == "A") {
         m_dns = new QDnsLookup(QDnsLookup::Type(QDnsLookup::A), m_options.dns_name, this);
     } else {
-        std::cerr << "DNS-Type " << m_options.dns_type.toStdString() << " is not supported!" << std::endl;
+        std::cerr << "DNS-Type "
+                  << m_options.dns_type.toStdString()
+                  << " is not supported!"
+                  << std::endl;
         QCoreApplication::exit(1);
         return;
     }
@@ -76,14 +88,20 @@ void DnsTracker::display_lookup() {
         QCoreApplication::exit(1);
         return;
     }
-
     if (m_dns->error() != QDnsLookup::NoError) {
         std::cerr << "Error during DNS: " << m_dns->errorString().toStdString() << std::endl;
         QCoreApplication::exit(1);
         return;
     }
 
-    std::cout << "Requested" << "\t" << "TTL" << "\t" << "Priority" << "\t" << "Target" << std::endl;
+    std::cout << "Requested"
+              << "\t"
+              << "TTL"
+              << "\t"
+              << "Priority"
+              << "\t"
+              << "Target"
+              << std::endl;
     if (m_options.dns_type.toUpper() == "SRV") {
         const auto records = m_dns->serviceRecords();
         for (const auto& rec : records) {
@@ -102,7 +120,10 @@ void DnsTracker::display_lookup() {
                       << std::endl;
         }
     } else {
-        std::cerr << "DNS-Type " << m_options.dns_type.toStdString() << " is not supported!" << std::endl;
+        std::cerr << "DNS-Type "
+                  << m_options.dns_type.toStdString()
+                  << " is not supported!"
+                  << std::endl;
         m_dns->deleteLater();
         QCoreApplication::exit(1);
         return;
@@ -150,17 +171,22 @@ void DnsTracker::display_summary(qint64 end_time) {
               << QDateTime::fromMSecsSinceEpoch(end_time).toString(Qt::ISODate).toStdString()
               << std::endl;
     std::cout << "For DNS-server: " << m_options.dns_server.toStdString() << std::endl;
+
     if (m_options.verbose) {
         std::cout << "From: ";
         if (m_options.dns_type.toUpper() == "SRV") {
             const auto& prev_srv_response = m_prev_srv_response;
             for (const auto& response : prev_srv_response) {
-                std::cout << response.target().toStdString() << " (Prio: " << response.priority() << ")" << std::endl;
+                std::cout << response.target().toStdString()
+                          << " (Prio: " << response.priority() << ")"
+                          << std::endl;
             }
             std::cout << "To: ";
             const auto& cur_srv_response = m_cur_srv_response;
             for (const auto& response : cur_srv_response) {
-                std::cout << response.target().toStdString() << " (Prio: " << response.priority() << ")" << std::endl;
+                std::cout << response.target().toStdString()
+                          << " (Prio: " << response.priority() << ")"
+                          << std::endl;
             }
         } else if (m_options.dns_type.toUpper() == "A") {
             const auto& prev_a_response = m_prev_a_response;
