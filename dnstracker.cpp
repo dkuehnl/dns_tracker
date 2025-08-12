@@ -56,7 +56,7 @@ void DnsTracker::run_lookup() {
     } else if (m_options.dns_type.toUpper() == "A") {
         m_dns = new QDnsLookup(QDnsLookup::Type(QDnsLookup::A), m_options.dns_name, this);
     } else {
-        std::cerr << "DNS-Type " << m_options.dns_type.toStdString() << " is not supported!!" << std::endl;
+        std::cerr << "DNS-Type " << m_options.dns_type.toStdString() << " is not supported!" << std::endl;
         QCoreApplication::exit(1);
         return;
     }
@@ -102,12 +102,14 @@ void DnsTracker::display_lookup() {
                       << std::endl;
         }
     } else {
-        std::cerr << "not supported type" << std::endl;
+        std::cerr << "DNS-Type " << m_options.dns_type.toStdString() << " is not supported!" << std::endl;
+        m_dns->deleteLater();
+        QCoreApplication::exit(1);
+        return;
     }
 
     m_dns->deleteLater();
-
-    QCoreApplication::quit();
+    QCoreApplication::exit(0);
     return;
 }
 
