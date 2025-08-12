@@ -47,6 +47,22 @@ QByteArray Hashing::hash_a_record(const QList<QDnsHostAddressRecord>& record) {
 }
 
 QByteArray Hashing::hash_srv_record(const QList<QDnsServiceRecord>& record) {
-    return 0;
+    QVector<QString> parts;
+    parts.reserve(record.size());
+    for (const auto& rec : record) {
+        QString target = normalize_name(rec.target());
+        QString part = QString("%1|%2|%3")
+                           .arg(rec.priority())
+                           .arg(rec.weight())
+                           .arg(target);
+        parts << part;
+    }
+    std::sort(parts.begin(), parts.end());
+    QByteArray joined_parts;
+    for (const auto& p : parts) {
+        joined_parts.append(p.toUtf8());
+        joined_parts.append('\n');
+    }
+    return QCryptographicHash::hash(joined_parts, QCryptographicHash::Md5);
 }
 
