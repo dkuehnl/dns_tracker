@@ -62,8 +62,11 @@ private:
     void run_lookup();
     void start_tracking();
     void display_lookup();
-    bool compare_srv();
-    bool compare_a();
+
+    bool analyze_srv();
+    bool analyze_a();
+    bool compare_hash(const QByteArray& prev_hash, const QByteArray& cur_hash);
+
 
 };
 
