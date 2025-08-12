@@ -30,9 +30,8 @@
 
 constexpr size_t SLEEP_INTERVALL = 60000;
 
-DnsTracker::DnsTracker(const Options& o) : m_options(o) {
-
-}
+DnsTracker::DnsTracker(const Options& options, QObject *parent)
+    : QObject(parent), m_options(options) {}
 
 void DnsTracker::start() {
     if (m_options.continue_measurment) {

@@ -40,7 +40,7 @@ class DnsTracker : public QObject {
     Q_OBJECT
 
 public:
-    DnsTracker(const Options& o);
+    DnsTracker(const Options& options, QObject *parent = nullptr);
 
 public slots:
     void start();

@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <getopt.h>
+#include <memory>
 
 #include <QCoreApplication>
 #include <QTimer>
@@ -30,8 +31,7 @@ void print_help() {
     std::cout << std::endl;
     std::cout << "Mandatory arguments are labled with *" << std::endl;
     std::cout << "\t*-t DNS-TYPE (NAPTR, SRV, A)" << std::endl;
-    std::cout << "\t*-s DNS-SERVER (IP-address, obsolet if -m is set)" << std::endl;
-    std::cout << "\t*-m [List of Servers]" << std::endl;
+    std::cout << "\t*-s DNS-SERVER (IP-address)" << std::endl;
     std::cout << "\t*-n DNS-NAME" << std::endl;
     std::cout << "\t[-c continues-measurment, pulls request every 30 seconds]" << std::endl;
     std::cout << "\t[-v verbose-mode]" << std::endl;
@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
         {"dns_type", required_argument, nullptr, 't'},
         {"dns_server", required_argument, nullptr, 's'},
         {"dns_name", required_argument, nullptr, 'n'},
-        {"multi_server", required_argument, nullptr, 'm'},
         {"verbose", no_argument, nullptr, 'v'},
         {"continue", no_argument, nullptr, 'c'},
         {"help", no_argument, nullptr, 'h'},
@@ -60,17 +59,14 @@ int main(int argc, char *argv[])
             opts.dns_type = optarg;
             break;
         case 's':
-            opts.dns_server = optarg;
-            break;
-        case 'n':
-            opts.dns_name = optarg;
-            break;
-        case 'm':
             opts.multi_dns_server.push_back(optarg);
             while (optind < argc && opts.multi_dns_server.size() <=5 && argv[optind][0] != '-') {
                 opts.multi_dns_server.push_back(argv[optind]);
                 ++optind;
             }
+            break;
+        case 'n':
+            opts.dns_name = optarg;
             break;
         case 'v':
             opts.verbose = true;
@@ -88,27 +84,34 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (opts.show_help || opts.dns_type.isEmpty() || opts.dns_name.isEmpty()) {
+    if (opts.show_help || opts.dns_type.isEmpty() || opts.dns_name.isEmpty() || opts.multi_dns_server.empty()) {
         print_help();
         return !opts.show_help;
     }
-    if ((opts.dns_server.isEmpty() && opts.multi_dns_server.empty()) || (!opts.dns_server.isEmpty() && !opts.multi_dns_server.empty())) {
-        std::cerr << "Invalid input, only -s OR -m can be selected. See -h for more information" << std::endl;
-        return 1;
-    }
 
-    if (!opts.multi_dns_server.empty()) {
+    /*if (!opts.multi_dns_server.empty()) {
         for (const auto& entry : opts.multi_dns_server) {
             std::cout << "'" << entry.toStdString() << "'" << std::endl;
         }
         return 0;
-    }
+    }*/
 
     //Using Qt-Event-Loop only because of the conviniend QLookUp-Class
     QCoreApplication app(argc, argv);
 
-    DnsTracker tracker(opts);
-    QTimer::singleShot(0, &tracker, SLOT(start()));
+    QList<QString> dns_server = opts.multi_dns_server;
+    for (const auto& server : dns_server) {
+        Options server_opts = opts;
+        server_opts.dns_server = server;
+
+        auto tracker = new DnsTracker(server_opts, &app);
+        QTimer::singleShot(0, tracker, [tracker]() {
+            tracker->start();
+        });
+    }
+
+    /*DnsTracker tracker(opts);
+    QTimer::singleShot(0, &tracker, SLOT(start()));*/
 
     return app.exec();
 }
