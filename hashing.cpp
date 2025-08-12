@@ -47,6 +47,6 @@ QByteArray Hashing::hash_a_record(const QList<QDnsHostAddressRecord>& record) {
 }
 
 QByteArray Hashing::hash_srv_record(const QList<QDnsServiceRecord>& record) {
-
+    return 0;
 }
 

@@ -45,6 +45,8 @@ public slots:
     void start();
 
 private:
+    QDnsLookup* m_dns = nullptr;
+
     Options m_options;
     qint64 m_start_time;
     QByteArray m_prev_a_record;
