@@ -17,7 +17,6 @@
 
 #include <iostream>
 #include <getopt.h>
-#include <memory>
 
 #include <QCoreApplication>
 #include <QTimer>
@@ -89,28 +88,27 @@ int main(int argc, char *argv[])
         return !opts.show_help;
     }
 
-    /*if (!opts.multi_dns_server.empty()) {
-        for (const auto& entry : opts.multi_dns_server) {
-            std::cout << "'" << entry.toStdString() << "'" << std::endl;
-        }
-        return 0;
-    }*/
+    if (opts.multi_dns_server.size() > 1) {
+        opts.multi_requests = true;
+    }
 
     //Using Qt-Event-Loop only because of the conviniend QLookUp-Class
     QCoreApplication app(argc, argv);
 
     QList<QString> dns_server = opts.multi_dns_server;
-    size_t active_trackers = dns_server.size();
+    auto active_trackers = std::make_shared<size_t>(dns_server.size());
+    auto app_ptr = &app;
+
     for (const auto& server : dns_server) {
         Options server_opts = opts;
         server_opts.dns_server = server;
 
         auto tracker = new DnsTracker(server_opts, &app);
 
-        QObject::connect(tracker, &DnsTracker::finished, [&]() {
-            active_trackers--;
-            if (active_trackers == 0) {
-                app.quit();
+        QObject::connect(tracker, &DnsTracker::finished, tracker, [active_trackers, app_ptr]() mutable {
+            (*active_trackers)--;
+            if (*active_trackers == 0) {
+                app_ptr->quit();
             }
         });
 

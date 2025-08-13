@@ -33,6 +33,7 @@ struct Options {
     QList<QString> multi_dns_server;
     bool verbose = false;
     bool continue_measurment = false;
+    bool multi_requests = false;
     bool show_help = false;
 };
 
