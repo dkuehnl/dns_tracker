@@ -23,6 +23,7 @@
 #include <QDateTime>
 
 #include "dnstracker.h"
+#include "display.h"
 
 void print_help() {
     std::cout << "Usage: dns_tracker -t [TYPE] -s [IP] -n [NAME] [OPTION]" << std::endl;
@@ -84,13 +85,18 @@ int main(int argc, char *argv[])
         }
     }
 
+    //Input-Validierung
     if (opts.show_help || opts.dns_type.isEmpty() || opts.dns_name.isEmpty() || opts.multi_dns_server.empty()) {
         print_help();
         return !opts.show_help;
     }
-
     if (opts.multi_dns_server.size() > 1) {
         opts.multi_requests = true;
+    }
+    if (opts.dns_type.toUpper() != "SRV" && opts.dns_type.toUpper() != "A") {
+        std::cerr << "Unsupported DNS-type: " << opts.dns_type.toUpper().toStdString() << std::endl;
+        print_help();
+        return 1;
     }
 
     //Using Qt-Event-Loop only because of the conviniend QLookUp-Class
@@ -99,22 +105,8 @@ int main(int argc, char *argv[])
     QList<QString> dns_server = opts.multi_dns_server;
     auto active_trackers = std::make_shared<size_t>(dns_server.size());
     auto app_ptr = &app;
-
-    if (opts.continue_measurment) {
-        std::cout << "Measurement started at "
-                  << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString()
-                  << std::endl;
-        if (opts.verbose) {
-            std::cout << "Time"
-                      << "\t\t"
-                      << "Requested"
-                      << "\t"
-                      << "Target"
-                      << "\t"
-                      << "Priority"
-                      << std::endl;
-        }
-    }
+    QString start_time = QDateTime::currentDateTime().toString(Qt::ISODate);
+    auto display = new Display(start_time, opts);
 
     for (const auto& server : dns_server) {
         Options server_opts = opts;
@@ -128,6 +120,11 @@ int main(int argc, char *argv[])
                 app_ptr->quit();
             }
         });
+        if (server_opts.dns_type.toUpper() == "SRV") {
+            QObject::connect(tracker, &DnsTracker::send_srv_update, display, &Display::update_srv_display);
+        } else if (server_opts.dns_type.toUpper() == "A") {
+            QObject::connect(tracker, &DnsTracker::send_a_update, display, &Display::update_a_display);
+        }
 
         QTimer::singleShot(0, tracker, [tracker]() {
             tracker->start();

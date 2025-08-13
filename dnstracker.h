@@ -37,6 +37,30 @@ struct Options {
     bool show_help = false;
 };
 
+struct DnsADisplayData {
+    QString server;
+    bool hash_changed;
+    QString prev_timestamp;
+    QList<QDnsHostAddressRecord> prev_response;
+    QString cur_timestamp;
+    QList<QDnsHostAddressRecord> cur_response;
+    QString start_timestamp;
+    QString end_timestamp;
+    QString duration;
+};
+
+struct DnsSrvDisplayData {
+    QString server;
+    bool hash_changed;
+    QString prev_timestamp;
+    QList<QDnsServiceRecord> prev_response;
+    QString cur_timestamp;
+    QList<QDnsServiceRecord> cur_response;
+    QString start_timestamp;
+    QString end_timestamp;
+    QString duration;
+};
+
 class DnsTracker : public QObject {
     Q_OBJECT
 
@@ -47,6 +71,8 @@ public slots:
     void start();
 
 signals:
+    void send_srv_update(DnsSrvDisplayData cur_data);
+    void send_a_update(DnsADisplayData cur_data);
     void finished();
 
 private:
