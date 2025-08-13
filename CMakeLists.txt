@@ -16,6 +16,7 @@ add_executable(dns_tracker
   main.cpp
   dnstracker.h dnstracker.cpp
   hashing.h hashing.cpp
+  display.h display.cpp
 
 )
 target_link_libraries(dns_tracker Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Network)

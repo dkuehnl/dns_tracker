@@ -35,20 +35,7 @@ DnsTracker::DnsTracker(const Options& options, QObject *parent)
 
 void DnsTracker::start() {
     if (m_options.continue_measurment) {
-        std::cout << "Measurement started at "
-                  << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString()
-                  << std::endl;
         m_start_time = QDateTime::currentMSecsSinceEpoch();
-        if (m_options.verbose) {
-            std::cout << "Time"
-                      << "\t\t"
-                      << "Requested"
-                      << "\t"
-                      << "Target"
-                      << "\t"
-                      << "Priority"
-                      << std::endl;
-        }
     }
     DnsTracker::run_lookup();
 
@@ -210,7 +197,7 @@ void DnsTracker::display_summary(qint64 end_time) {
 
     std::cout << "Duration of change since start of measurement: "
               << DnsTracker::calculate_delay(end_time).toString("hh:mm:ss").toStdString()
-              << std::endl;
+              << std::endl << std::endl;
 }
 
 QTime DnsTracker::calculate_delay(qint64 end_time) {
@@ -226,6 +213,8 @@ bool DnsTracker::analyze_srv() {
     bool hash_changed = DnsTracker::compare_hash(m_prev_srv_hash, m_cur_srv_hash);
 
     if (m_options.verbose) {
+        std::cout << "@" << m_options.dns_server.toStdString() << std::endl;
+
         const auto records = m_dns->serviceRecords();
         for (const auto& record : records) {
             std::cout << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString() << "\t"
@@ -235,6 +224,7 @@ bool DnsTracker::analyze_srv() {
         }
         std::cout << std::endl;
     } else if (!m_options.verbose & !hash_changed) {
+        std::cout << "@" << m_options.dns_server.toStdString() << std::endl;
         std::cout << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString() << "\t"
                   << "No Change detected"
                   << std::endl;
@@ -248,6 +238,8 @@ bool DnsTracker::analyze_a() {
     bool hash_changed = DnsTracker::compare_hash(m_prev_a_hash, m_cur_a_hash);
 
     if (m_options.verbose) {
+        std::cout << "@" << m_options.dns_server.toStdString() << std::endl;
+
         const auto records = m_dns->hostAddressRecords();
         for (const auto& record : records) {
             std::cout << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString() << "\t"
@@ -255,6 +247,7 @@ bool DnsTracker::analyze_a() {
                       << record.value().toString().toStdString() << std::endl;
         }
     } else if (!m_options.verbose & !hash_changed) {
+        std::cout << "@" << m_options.dns_server.toStdString() << std::endl;
         std::cout << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString() << "\t"
                   << "No Change detected"
                   << std::endl;

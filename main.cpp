@@ -20,6 +20,7 @@
 
 #include <QCoreApplication>
 #include <QTimer>
+#include <QDateTime>
 
 #include "dnstracker.h"
 
@@ -99,6 +100,22 @@ int main(int argc, char *argv[])
     auto active_trackers = std::make_shared<size_t>(dns_server.size());
     auto app_ptr = &app;
 
+    if (opts.continue_measurment) {
+        std::cout << "Measurement started at "
+                  << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString()
+                  << std::endl;
+        if (opts.verbose) {
+            std::cout << "Time"
+                      << "\t\t"
+                      << "Requested"
+                      << "\t"
+                      << "Target"
+                      << "\t"
+                      << "Priority"
+                      << std::endl;
+        }
+    }
+
     for (const auto& server : dns_server) {
         Options server_opts = opts;
         server_opts.dns_server = server;
@@ -116,9 +133,6 @@ int main(int argc, char *argv[])
             tracker->start();
         });
     }
-
-    /*DnsTracker tracker(opts);
-    QTimer::singleShot(0, &tracker, SLOT(start()));*/
 
     return app.exec();
 }
