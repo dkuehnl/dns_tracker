@@ -24,8 +24,8 @@
 #include <iostream>
 #include <QHostAddress>
 
-Display::Display(QString start_time, const Options& opt) :
-    m_start_time(start_time), m_opt(opt) {}
+Display::Display(const QString &start_time, const Options& opt, QObject *parent) :
+    QObject(parent), m_start_time(start_time), m_opt(opt) {}
 
 void Display::render_a_display() {
     std::cout << "\033[2J\033[3J\033[H";
@@ -38,7 +38,7 @@ void Display::render_a_display() {
                   << "Target"
                   << std::endl;
     }
-    const auto a_responses = m_a_responses;
+    const auto& a_responses = m_a_responses;
     for (const auto& response : a_responses) {
         std::cout << "@" << response.server.toStdString();
         if (response.hash_changed) {
@@ -109,7 +109,7 @@ void Display::render_single_a() {
               << "Target"
               << std::endl;
 
-    const auto a_responses = m_a_responses;
+    const auto& a_responses = m_a_responses;
     for (const auto& response : a_responses) {
         std::cout << "@" << response.server.toStdString();
         if (response.hash_changed) {
@@ -139,7 +139,7 @@ void Display::render_srv_display() {
                   << "Priority"
                   << std::endl;
     }
-    const auto srv_responses = m_srv_responses;
+    const auto& srv_responses = m_srv_responses;
     for (const auto& response : srv_responses) {
         std::cout << "@" << response.server.toStdString() << std::endl;
         if (m_opt.verbose) {
@@ -214,7 +214,7 @@ void Display::render_single_srv() {
               << "Priority"
               << std::endl;
 
-    const auto srv_responses = m_srv_responses;
+    const auto& srv_responses = m_srv_responses;
     for (const auto& response : srv_responses) {
         std::cout << "@" << response.server.toStdString() << std::endl;
 

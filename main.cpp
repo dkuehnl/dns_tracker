@@ -26,6 +26,7 @@
 #include "display.h"
 
 void print_help() {
+    std::cout << "DNS-Tracker v1.2" << std::endl;
     std::cout << "Usage: dns_tracker -t [TYPE] -s [IP] -n [NAME] [OPTION]" << std::endl;
     std::cout << "In standard-mode an dns-request is issued and the answer displayed." << std::endl;
     std::cout << "If -c for continues measurment is activated the same request will be send every 30 seconds until quit with STRG+C or the response changed." << std::endl;
@@ -107,6 +108,7 @@ int main(int argc, char *argv[])
     auto app_ptr = &app;
     QString start_time = QDateTime::currentDateTime().toString(Qt::ISODate);
     auto display = new Display(start_time, opts);
+    display->setParent(&app);
 
     for (const auto& server : dns_server) {
         Options server_opts = opts;

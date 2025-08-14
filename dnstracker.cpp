@@ -144,45 +144,45 @@ QTime DnsTracker::calculate_delay(qint64 end_time) {
 }
 
 bool DnsTracker::analyze_srv() {
-    DnsSrvDisplayData* data = new DnsSrvDisplayData;
+    DnsSrvDisplayData data;
 
     m_cur_srv_response = m_dns->serviceRecords();
     m_cur_srv_hash = Hashing::hash_srv_record(m_dns->serviceRecords());
     bool hash_changed = DnsTracker::compare_hash(m_prev_srv_hash, m_cur_srv_hash);
     if (hash_changed) {
         qint64 end_time = QDateTime::currentMSecsSinceEpoch();
-        data->end_timestamp = QDateTime::fromMSecsSinceEpoch(end_time).toString(Qt::ISODate);
-        data->duration = DnsTracker::calculate_delay(end_time).toString("hh:mm:ss");
+        data.end_timestamp = QDateTime::fromMSecsSinceEpoch(end_time).toString(Qt::ISODate);
+        data.duration = DnsTracker::calculate_delay(end_time).toString("hh:mm:ss");
     }
 
-    data->server = m_options.dns_server;
-    data->prev_response = m_prev_srv_response;
-    data->cur_response = m_cur_srv_response;
-    data->cur_timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
-    data->hash_changed = hash_changed;
-    emit send_srv_update(*data);
+    data.server = m_options.dns_server;
+    data.prev_response = m_prev_srv_response;
+    data.cur_response = m_cur_srv_response;
+    data.cur_timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+    data.hash_changed = hash_changed;
+    emit send_srv_update(data);
 
     return hash_changed;
 }
 
 bool DnsTracker::analyze_a() {
-    DnsADisplayData* data = new DnsADisplayData;
+    DnsADisplayData data;
 
     m_cur_a_response = m_dns->hostAddressRecords();
     m_cur_a_hash = Hashing::hash_a_record(m_dns->hostAddressRecords());
     bool hash_changed = DnsTracker::compare_hash(m_prev_a_hash, m_cur_a_hash);
     if (hash_changed) {
         qint64 end_time = QDateTime::currentMSecsSinceEpoch();
-        data->end_timestamp = QDateTime::fromMSecsSinceEpoch(end_time).toString(Qt::ISODate);
-        data->duration = DnsTracker::calculate_delay(end_time).toString("hh:mm:ss");
+        data.end_timestamp = QDateTime::fromMSecsSinceEpoch(end_time).toString(Qt::ISODate);
+        data.duration = DnsTracker::calculate_delay(end_time).toString("hh:mm:ss");
     }
 
-    data->server = m_options.dns_server;
-    data->prev_response = m_prev_a_response;
-    data->cur_response = m_cur_a_response;
-    data->cur_timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
-    data->hash_changed = hash_changed;
-    emit send_a_update(*data);
+    data.server = m_options.dns_server;
+    data.prev_response = m_prev_a_response;
+    data.cur_response = m_cur_a_response;
+    data.cur_timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+    data.hash_changed = hash_changed;
+    emit send_a_update(data);
 
     return hash_changed;
 }

@@ -33,7 +33,7 @@ class Display : public QObject {
     Q_OBJECT
 
 public:
-    Display(QString start_time, const Options& opt);
+    Display(const QString& start_time, const Options& opt, QObject *parent = nullptr);
 
 public slots:
     void update_a_display(DnsADisplayData cur_data);
