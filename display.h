@@ -34,8 +34,6 @@ class Display : public QObject {
 
 public:
     Display(QString start_time, const Options& opt);
-    void render_a_display();
-    void render_srv_display();
 
 public slots:
     void update_a_display(DnsADisplayData cur_data);
@@ -46,6 +44,11 @@ private:
     Options m_opt;
     QMap<QString, DnsADisplayData> m_a_responses;
     QMap<QString, DnsSrvDisplayData> m_srv_responses;
+
+    void render_a_display();
+    void render_srv_display();
+    void render_single_a();
+    void render_single_srv();
 };
 
 #endif // DISPLAY_H

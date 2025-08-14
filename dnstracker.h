@@ -92,7 +92,7 @@ private:
 
     void run_lookup();
     void start_tracking();
-    void display_lookup();
+    void display_single_lookup();
     void display_summary(qint64 end_time);
     void change_member_values();
 

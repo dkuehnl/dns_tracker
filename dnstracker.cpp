@@ -64,12 +64,12 @@ void DnsTracker::run_lookup() {
     if (m_options.continue_measurment) {
         QObject::connect(m_dns, &QDnsLookup::finished, this, &DnsTracker::start_tracking);
     } else {
-        QObject::connect(m_dns, &QDnsLookup::finished, this, &DnsTracker::display_lookup);
+        QObject::connect(m_dns, &QDnsLookup::finished, this, &DnsTracker::display_single_lookup);
     }
     m_dns->lookup();
 }
 
-void DnsTracker::display_lookup() {
+void DnsTracker::display_single_lookup() {
     if (!m_dns) {
         std::cerr << "Unspecified error during dns-request." << std::endl;
         emit finished();
@@ -83,40 +83,20 @@ void DnsTracker::display_lookup() {
         return;
     }
 
-    std::cout << "Requested"
-              << "\t"
-              << "TTL"
-              << "\t"
-              << "Priority"
-              << "\t"
-              << "Target"
-              << std::endl;
-    if (m_options.dns_type.toUpper() == "SRV") {
-        const auto records = m_dns->serviceRecords();
-        for (const auto& rec : records) {
-            std::cout << rec.name().toStdString()
-                      << "\t" << rec.timeToLive()
-                      << "\t" << rec.priority()
-                      << "\t" << rec.target().toStdString()
-                      << std::endl;
-        }
-    } else if (m_options.dns_type.toUpper() == "A") {
-        const auto records = m_dns->hostAddressRecords();
-        for (const QDnsHostAddressRecord& rec : records) {
-            std::cout << rec.name().toStdString()
-                      << "\t" << rec.timeToLive()
-                      << "\t\t" << rec.value().toString().toStdString()
-                      << std::endl;
-        }
-    } else {
-        std::cerr << "DNS-Type "
-                  << m_options.dns_type.toStdString()
-                  << " is not supported!"
-                  << std::endl;
-        m_dns->deleteLater();
-        emit finished();
-        this->deleteLater();
-        return;
+    if (m_options.dns_type.toUpper() == "A") {
+        DnsADisplayData* data = new DnsADisplayData;
+        data->cur_response = m_dns->hostAddressRecords();
+        data->server = m_options.dns_server;
+        data->cur_timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+
+        emit send_a_update(*data);
+    } else if (m_options.dns_type.toUpper() == "SRV") {
+        DnsSrvDisplayData* data = new DnsSrvDisplayData;
+        data->cur_response = m_dns->serviceRecords();
+        data->server = m_options.dns_server;
+        data->cur_timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+
+        emit send_srv_update(*data);
     }
 
     m_dns->deleteLater();

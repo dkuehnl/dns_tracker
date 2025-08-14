@@ -36,8 +36,6 @@ void Display::render_a_display() {
                   << "Requested"
                   << "\t"
                   << "Target"
-                  << "\t"
-                  << "Priority"
                   << std::endl;
     }
     const auto a_responses = m_a_responses;
@@ -97,6 +95,33 @@ void Display::render_a_display() {
             std::cout << "Duration of change since start of measurement: "
                       << response.duration.toStdString()
                       << std::endl << std::endl;
+        }
+    }
+}
+
+void Display::render_single_a() {
+    std::cout << "\033[2J\033[3J\033[H";
+    std::cout << "Measurement started at: " << m_start_time.toStdString() << std::endl;
+    std::cout << "Time"
+              << "\t\t"
+              << "Requested"
+              << "\t"
+              << "Target"
+              << std::endl;
+
+    const auto a_responses = m_a_responses;
+    for (const auto& response : a_responses) {
+        std::cout << "@" << response.server.toStdString();
+        if (response.hash_changed) {
+            std::cout << " (finished)";
+        }
+        std::cout << std::endl;
+
+        std::cout << response.cur_timestamp.toStdString() << "\t";
+        const auto cur_a_record = response.cur_response;
+        for (const auto& cur_a : cur_a_record) {
+            std::cout << cur_a.name().toStdString() << "\t"
+                      << cur_a.value().toString().toStdString() << std::endl;
         }
     }
 }
@@ -177,6 +202,32 @@ void Display::render_srv_display() {
     }
 }
 
+void Display::render_single_srv() {
+    std::cout << "\033[2J\033[3J\033[H";
+    std::cout << "Measurement started at: " << m_start_time.toStdString() << std::endl;
+    std::cout << "Time"
+              << "\t\t"
+              << "Requested"
+              << "\t"
+              << "Target"
+              << "\t"
+              << "Priority"
+              << std::endl;
+
+    const auto srv_responses = m_srv_responses;
+    for (const auto& response : srv_responses) {
+        std::cout << "@" << response.server.toStdString() << std::endl;
+
+        std::cout << response.cur_timestamp.toStdString() << std::endl;
+        const auto cur_srv_record = response.cur_response;
+        for (const auto& cur_srv : cur_srv_record) {
+            std::cout << "\t" << cur_srv.name().toStdString() << "\t"
+                      << cur_srv.target().toStdString() << "\t"
+                      << cur_srv.priority() << std::endl;
+        }
+    }
+}
+
 void Display::update_a_display(DnsADisplayData cur_data) {
     if (m_a_responses.contains(cur_data.server)) {
         QString temp_timestamp = m_a_responses[cur_data.server].cur_timestamp;
@@ -186,7 +237,11 @@ void Display::update_a_display(DnsADisplayData cur_data) {
         m_a_responses[cur_data.server] = cur_data;
     }
 
-    Display::render_a_display();
+    if (m_opt.continue_measurment) {
+        Display::render_a_display();
+    } else {
+        Display::render_single_a();
+    }
 }
 
 void Display::update_srv_display(DnsSrvDisplayData cur_data) {
@@ -198,5 +253,9 @@ void Display::update_srv_display(DnsSrvDisplayData cur_data) {
         m_srv_responses[cur_data.server] = cur_data;
     }
 
-    Display::render_srv_display();
+    if (m_opt.continue_measurment) {
+        Display::render_srv_display();
+    } else {
+        Display::render_single_srv();
+    }
 }
