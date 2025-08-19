@@ -39,10 +39,11 @@ struct Options {
 
 struct DnsADisplayData {
     QString server;
-    bool hash_changed;
+    bool hash_changed = false;
     QString prev_timestamp;
     QList<QDnsHostAddressRecord> prev_response;
     QString cur_timestamp;
+    QByteArray cur_hash;
     QList<QDnsHostAddressRecord> cur_response;
     QString start_timestamp;
     QString end_timestamp;
@@ -51,10 +52,11 @@ struct DnsADisplayData {
 
 struct DnsSrvDisplayData {
     QString server;
-    bool hash_changed;
+    bool hash_changed = false;
     QString prev_timestamp;
     QList<QDnsServiceRecord> prev_response;
     QString cur_timestamp;
+    QByteArray cur_hash;
     QList<QDnsServiceRecord> cur_response;
     QString start_timestamp;
     QString end_timestamp;

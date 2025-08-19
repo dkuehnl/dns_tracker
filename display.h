@@ -29,6 +29,20 @@
 
 #include "dnstracker.h"
 
+struct TimestampsARecord {
+    QList<QDnsHostAddressRecord> record;
+    QString server;
+    QString first_occur = "";
+    QString last_occur = "";
+};
+
+struct TimestampsSrvRecord {
+    QList<QDnsServiceRecord> record;
+    QString server;
+    QString first_occur = "";
+    QString last_occur = "";
+};
+
 class Display : public QObject {
     Q_OBJECT
 
@@ -44,6 +58,9 @@ private:
     Options m_opt;
     QMap<QString, DnsADisplayData> m_a_responses;
     QMap<QString, DnsSrvDisplayData> m_srv_responses;
+
+    QMap<QString, QMap<QByteArray, TimestampsARecord>> m_a_occurance;
+    QMap<QString, QMap<QByteArray, TimestampsSrvRecord>> m_srv_occurance;
 
     void render_a_display();
     void render_srv_display();

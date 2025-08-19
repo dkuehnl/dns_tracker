@@ -11,9 +11,10 @@
  * Purpose of this file:
  * The dns-tracker-class defines an the tracking-object. It is resposible
  * for running the lookup regarding to the settings it is instantiiated with.
- * Only for continue-mode it will analyze the responses, compare them and
- * stop the lookup-loop when it detects a change. Then it will calculate the
- * time since program-start until the dns-change happened.
+ * Only for continue-mode it will sent every 60 seconds (SLEEP_INTERVALL) a new
+ * DNS-request to the server set at the beginning.
+ * Continues-Mode is activ until STRG+C, time-measurement is currently not
+ * active, but still remain in code for future usage.
  *
  * Author: Dennis Kuehnlein (2025)
 ********************************************************************/
@@ -84,19 +85,19 @@ void DnsTracker::display_single_lookup() {
     }
 
     if (m_options.dns_type.toUpper() == "A") {
-        DnsADisplayData* data = new DnsADisplayData;
-        data->cur_response = m_dns->hostAddressRecords();
-        data->server = m_options.dns_server;
-        data->cur_timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+        DnsADisplayData data;
+        data.cur_response = m_dns->hostAddressRecords();
+        data.server = m_options.dns_server;
+        data.cur_timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
 
-        emit send_a_update(*data);
+        emit send_a_update(data);
     } else if (m_options.dns_type.toUpper() == "SRV") {
-        DnsSrvDisplayData* data = new DnsSrvDisplayData;
-        data->cur_response = m_dns->serviceRecords();
-        data->server = m_options.dns_server;
-        data->cur_timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+        DnsSrvDisplayData data;
+        data.cur_response = m_dns->serviceRecords();
+        data.server = m_options.dns_server;
+        data.cur_timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
 
-        emit send_srv_update(*data);
+        emit send_srv_update(data);
     }
 
     m_dns->deleteLater();
@@ -127,15 +128,16 @@ void DnsTracker::start_tracking() {
     }
 
     if (hash_changed) {
-        emit finished();
+        /*emit finished();
         this->deleteLater();
-        return;
+        return;*/
     }
 
     DnsTracker::change_member_values();
     QTimer::singleShot(SLEEP_INTERVALL, this, &DnsTracker::run_lookup);
 }
 
+/*Used for measurement between start and change-detection, currently not active*/
 QTime DnsTracker::calculate_delay(qint64 end_time) {
     qint64 duration = end_time - m_start_time;
     QTime duration_time(0,0);
@@ -158,6 +160,7 @@ bool DnsTracker::analyze_srv() {
     data.server = m_options.dns_server;
     data.prev_response = m_prev_srv_response;
     data.cur_response = m_cur_srv_response;
+    data.cur_hash = m_cur_srv_hash;
     data.cur_timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
     data.hash_changed = hash_changed;
     emit send_srv_update(data);
@@ -180,6 +183,7 @@ bool DnsTracker::analyze_a() {
     data.server = m_options.dns_server;
     data.prev_response = m_prev_a_response;
     data.cur_response = m_cur_a_response;
+    data.cur_hash = m_cur_a_hash;
     data.cur_timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
     data.hash_changed = hash_changed;
     emit send_a_update(data);
@@ -187,6 +191,7 @@ bool DnsTracker::analyze_a() {
     return hash_changed;
 }
 
+/*Used for comparing response and automatic program-exit, currently not active*/
 bool DnsTracker::compare_hash(const QByteArray& prev_hash, const QByteArray& cur_hash) {
     if (prev_hash.isEmpty()) {
         return false;
@@ -197,6 +202,7 @@ bool DnsTracker::compare_hash(const QByteArray& prev_hash, const QByteArray& cur
         return true;
     }
 }
+
 
 void DnsTracker::change_member_values() {
     m_prev_a_hash = m_cur_a_hash;

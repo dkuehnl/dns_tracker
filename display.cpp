@@ -30,71 +30,34 @@ Display::Display(const QString &start_time, const Options& opt, QObject *parent)
 void Display::render_a_display() {
     std::cout << "\033[2J\033[3J\033[H";
     std::cout << "Measurement started at: " << m_start_time.toStdString() << std::endl;
-    if (m_opt.verbose) {
-        std::cout << "Time"
-                  << "\t\t"
-                  << "Requested"
-                  << "\t"
-                  << "Target"
+
+    for (auto outer_it = m_a_occurance.cbegin(); outer_it != m_a_occurance.cend(); ++outer_it) {
+        const QString& server = outer_it.key();
+        const auto& by_hash = outer_it.value();
+
+        std::cout << "@" << server.toStdString()
                   << std::endl;
-    }
-    const auto& a_responses = m_a_responses;
-    for (const auto& response : a_responses) {
-        std::cout << "@" << response.server.toStdString();
-        if (response.hash_changed) {
-            std::cout << " (finished)";
-        }
-        std::cout << std::endl;
-        if (m_opt.verbose) {
-            if (!response.prev_response.isEmpty()) {
-                std::cout << response.prev_timestamp.toStdString() << "\t";
-                const auto prev_a_record = response.prev_response;
-                for (const auto& prev_a : prev_a_record) {
-                    std::cout << prev_a.name().toStdString() << "\t"
-                              << prev_a.value().toString().toStdString() << std::endl;
-                }
-            }
-            std::cout << response.cur_timestamp.toStdString() << "\t";
-            const auto cur_a_record = response.cur_response;
-            for (const auto& cur_a : cur_a_record) {
-                std::cout << cur_a.name().toStdString() << "\t"
-                          << cur_a.value().toString().toStdString() << std::endl;
-            }
-        } else if (!(m_opt.verbose & response.hash_changed)) {
-            if (!response.prev_response.isEmpty()) {
-                std::cout << response.prev_timestamp.toStdString() << "\t"
-                          << "No Change detected" << std::endl;
-            }
-            std::cout << response.cur_timestamp.toStdString() << "\t"
-                      << "No Change detected" << std::endl;
-        }
 
-        if (response.hash_changed) {
-            std::cout << "----------------------------------------------------------------------" << std::endl;
-            std::cout << "DNS-response for "
-                      << m_opt.dns_name.toStdString()
-                      << " has changed at: "
-                      << response.end_timestamp.toStdString()
+        for (auto inner_it = by_hash.cbegin(); inner_it != by_hash.cend(); ++inner_it) {
+            const TimestampsARecord& occurance = inner_it.value();
+
+            std::cout << "\tFirst: " << occurance.first_occur.toStdString()
+                      << "\tLast: " << occurance.last_occur.toStdString()
                       << std::endl;
-            std::cout << "For DNS-server: " << response.server.toStdString() << std::endl;
 
-            if (m_opt.verbose) {
-                std::cout << "From: ";
-                const auto prev_a_record = response.prev_response;
-                for (const auto& prev_a : prev_a_record) {
-                    std::cout << prev_a.value().toString().toStdString() << std::endl;
-                }
-
-                std::cout << "To: ";
-                const auto cur_a_record = response.cur_response;
-                for (const auto& cur_a : cur_a_record) {
-                    std::cout << cur_a.value().toString().toStdString() << std::endl;
+            for (const auto& entry : occurance.record) {
+                if (m_opt.verbose) {
+                    std::cout << "Requested"
+                              << "\t"
+                              << "Target"
+                              << std::endl;
+                    std::cout << entry.name().toStdString() << "\t"
+                              << entry.value().toString().toStdString() << std::endl;
+                } else {
+                    std::cout << entry.value().toString().toStdString() << std::endl;
                 }
             }
-
-            std::cout << "Duration of change since start of measurement: "
-                      << response.duration.toStdString()
-                      << std::endl << std::endl;
+            std::cout << std::endl;
         }
     }
 }
@@ -129,76 +92,41 @@ void Display::render_single_a() {
 void Display::render_srv_display() {
     std::cout << "\033[2J\033[3J\033[H";
     std::cout << "Measurement started at: " << m_start_time.toStdString() << std::endl;
-    if (m_opt.verbose) {
-        std::cout << "Time"
-                  << "\t\t"
-                  << "Requested"
-                  << "\t"
-                  << "Target"
-                  << "\t"
-                  << "Priority"
-                  << std::endl;
-    }
-    const auto& srv_responses = m_srv_responses;
-    for (const auto& response : srv_responses) {
-        std::cout << "@" << response.server.toStdString() << std::endl;
-        if (m_opt.verbose) {
-            if (!response.prev_response.isEmpty()) {
-                std::cout << response.prev_timestamp.toStdString() << std::endl;
-                const auto prev_srv_record = response.prev_response;
-                for (const auto& prev_srv : prev_srv_record) {
-                    std::cout << "\t" << prev_srv.name().toStdString() << "\t"
-                              << prev_srv.target().toStdString() << "\t"
-                              << prev_srv.priority() << std::endl;
-                }
-            }
-            std::cout << response.cur_timestamp.toStdString() << std::endl;
-            const auto cur_srv_record = response.cur_response;
-            for (const auto& cur_srv : cur_srv_record) {
-                std::cout << "\t" << cur_srv.name().toStdString() << "\t"
-                          << cur_srv.target().toStdString() << "\t"
-                          << cur_srv.priority() << std::endl;
-            }
-        } else if (!(m_opt.verbose & response.hash_changed)) {
-            if (!response.prev_response.isEmpty()) {
-                std::cout << response.prev_timestamp.toStdString() << "\t"
-                          << "No Change detected" << std::endl;
-            }
-            std::cout << response.cur_timestamp.toStdString() << "\t"
-                      << "No Change detected" << std::endl;
-        }
 
-        if (response.hash_changed) {
-            std::cout << "----------------------------------------------------------------------" << std::endl;
-            std::cout << "DNS-response for "
-                      << m_opt.dns_name.toStdString()
-                      << " has changed at: "
-                      << response.end_timestamp.toStdString()
+    for (auto outer_it = m_srv_occurance.cbegin(); outer_it != m_srv_occurance.cend(); ++outer_it) {
+        const QString &server = outer_it.key();
+        const auto   &by_hash  = outer_it.value();
+
+        std::cout << "@" << server.toStdString()
+                  << std::endl;
+
+        for (auto inner_it = by_hash.cbegin(); inner_it != by_hash.cend(); ++inner_it) {
+            const TimestampsSrvRecord& occurance = inner_it.value();
+
+            std::cout << "\tFirst: " << occurance.first_occur.toStdString()
+                      << "\tLast: " << occurance.last_occur.toStdString()
                       << std::endl;
-            std::cout << "For DNS-server: " << response.server.toStdString() << std::endl;
 
             if (m_opt.verbose) {
-                std::cout << "From: ";
-                const auto prev_srv_record = response.prev_response;
-                for (const auto& prev_srv : prev_srv_record) {
-                    std::cout << prev_srv.target().toStdString()
-                              << " (Prio: " << prev_srv.priority() << ")"
-                              << std::endl;
-                }
-
-                std::cout << "To: ";
-                const auto cur_srv_record = response.cur_response;
-                for (const auto& cur_srv : cur_srv_record) {
-                    std::cout << cur_srv.target().toStdString()
-                    << " (Prio: " << cur_srv.priority() << ")"
-                    << std::endl;
+                std::cout << "Requested"
+                          << "\t"
+                          << "Target"
+                          << "\t"
+                          << "Priority"
+                          << std::endl;
+            }
+            for (const auto& entry : occurance.record) {
+                if (m_opt.verbose) {
+                    std::cout << entry.name().toStdString() << "\t"
+                              << entry.target().toStdString() << "\t"
+                              << entry.priority() << std::endl;
+                } else {
+                    std::cout << entry.target().toStdString() << "\t"
+                              << entry.priority() << std::endl;
                 }
             }
-
-            std::cout << "Duration of change since start of measurement: "
-                      << response.duration.toStdString()
-                      << std::endl << std::endl;
         }
+        std::cout << std::endl;
     }
 }
 
@@ -229,33 +157,33 @@ void Display::render_single_srv() {
 }
 
 void Display::update_a_display(DnsADisplayData cur_data) {
-    if (m_a_responses.contains(cur_data.server)) {
-        QString temp_timestamp = m_a_responses[cur_data.server].cur_timestamp;
-        m_a_responses[cur_data.server] = cur_data;
-        m_a_responses[cur_data.server].prev_timestamp = temp_timestamp;
+    auto& inner_map = m_a_occurance[cur_data.server];
+
+    if (inner_map.contains(cur_data.cur_hash)) {
+        inner_map[cur_data.cur_hash].record = cur_data.cur_response;
+        inner_map[cur_data.cur_hash].last_occur = cur_data.cur_timestamp;
     } else {
-        m_a_responses[cur_data.server] = cur_data;
+        inner_map[cur_data.cur_hash].first_occur = cur_data.cur_timestamp;
+        inner_map[cur_data.cur_hash].last_occur  = cur_data.cur_timestamp;
+        inner_map[cur_data.cur_hash].record     = cur_data.cur_response;
+        inner_map[cur_data.cur_hash].server     = cur_data.server;
     }
 
-    if (m_opt.continue_measurment) {
-        Display::render_a_display();
-    } else {
-        Display::render_single_a();
-    }
+    Display::render_a_display();
 }
 
 void Display::update_srv_display(DnsSrvDisplayData cur_data) {
-    if (m_srv_responses.contains(cur_data.server)) {
-        QString temp_timestamp = m_srv_responses[cur_data.server].cur_timestamp;
-        m_srv_responses[cur_data.server] = cur_data;
-        m_srv_responses[cur_data.server].prev_timestamp = temp_timestamp;
+    auto& inner_map = m_srv_occurance[cur_data.server];
+
+    if (inner_map.contains(cur_data.cur_hash)) {
+        inner_map[cur_data.cur_hash].record = cur_data.cur_response;
+        inner_map[cur_data.cur_hash].last_occur = cur_data.cur_timestamp;
     } else {
-        m_srv_responses[cur_data.server] = cur_data;
+        inner_map[cur_data.cur_hash].first_occur = cur_data.cur_timestamp;
+        inner_map[cur_data.cur_hash].last_occur  = cur_data.cur_timestamp;
+        inner_map[cur_data.cur_hash].record     = cur_data.cur_response;
+        inner_map[cur_data.cur_hash].server     = cur_data.server;
     }
 
-    if (m_opt.continue_measurment) {
-        Display::render_srv_display();
-    } else {
-        Display::render_single_srv();
-    }
+    Display::render_srv_display();
 }
