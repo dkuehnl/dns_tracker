@@ -29,13 +29,13 @@ void print_help() {
     std::cout << "DNS-Tracker v1.3" << std::endl;
     std::cout << "Usage: dns_tracker -t [TYPE] -s [IP] -n [NAME] [OPTION]" << std::endl;
     std::cout << "In standard-mode an dns-request is issued and the answer displayed." << std::endl;
-    std::cout << "If -c for continues measurment is activated the same request will be send every 30 seconds until quit with STRG+C" << std::endl;
+    std::cout << "If -c for continues measurment is activated the same request will be send every 60 seconds until quit with STRG+C" << std::endl;
     std::cout << std::endl;
     std::cout << "Mandatory arguments are labled with *" << std::endl;
     std::cout << "\t*-t DNS-TYPE (SRV, A)" << std::endl;
     std::cout << "\t*-s DNS-SERVER (IP-address)" << std::endl;
     std::cout << "\t*-n DNS-NAME" << std::endl;
-    std::cout << "\t[-c continues-measurment, pulls request every 30 seconds]" << std::endl;
+    std::cout << "\t[-c continues-measurment, pulls request every 60 seconds]" << std::endl;
     std::cout << "\t[-v verbose-mode]" << std::endl;
     std::cout << "\t[-h show help]" << std::endl;
 }
