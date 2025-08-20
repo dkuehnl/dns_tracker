@@ -113,13 +113,16 @@ void Display::render_srv_display() {
                           << "Target"
                           << "\t"
                           << "Priority"
+                          << "\t"
+                          << "TTL"
                           << std::endl;
             }
             for (const auto& entry : occurance.record) {
                 if (m_opt.verbose) {
                     std::cout << entry.name().toStdString() << "\t"
                               << entry.target().toStdString() << "\t"
-                              << entry.priority() << std::endl;
+                              << entry.priority() << "\t"
+                              << entry.timeToLive() << std::endl;
                 } else {
                     std::cout << entry.target().toStdString() << "\t"
                               << entry.priority() << std::endl;
