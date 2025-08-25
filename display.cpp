@@ -22,7 +22,10 @@
 #include "display.h"
 
 #include <iostream>
+
 #include <QHostAddress>
+#include <QTextStream>
+#include <QDebug>
 
 Display::Display(const QString &start_time, const Options& opt, QObject *parent) :
     QObject(parent), m_start_time(start_time), m_opt(opt) {}
@@ -172,8 +175,37 @@ void Display::update_a_display(DnsADisplayData cur_data) {
         inner_map[cur_data.cur_hash].server     = cur_data.server;
     }
 
+    if (m_opt.file_export) {
+        Display::write_a_to_csv(cur_data);
+    }
     Display::render_a_display();
 }
+
+void Display::write_a_to_csv(DnsADisplayData cur_data) {
+    QFile file(m_opt.filepath);
+    if (!file.open(QIODevice::Append | QIODevice::Text)) {
+        std::cerr << "File could not be opended: " << m_opt.filepath.toStdString() << std::endl;
+        return;
+    }
+
+    QStringList record_entry;
+    const auto data = cur_data.cur_response;
+    for (const auto& rec : data) {
+        record_entry << QString("\"%1(%2)\"").arg(rec.value().toString()).arg(rec.timeToLive());
+    }
+
+    QStringList row = {
+        cur_data.cur_timestamp,
+        cur_data.server,
+        m_opt.dns_name,
+        record_entry.join(';')
+    };
+
+    QTextStream out(&file);
+    out << row.join(';') << '\n';
+    file.close();
+}
+
 
 void Display::update_srv_display(DnsSrvDisplayData cur_data) {
     auto& inner_map = m_srv_occurance[cur_data.server];
@@ -188,5 +220,33 @@ void Display::update_srv_display(DnsSrvDisplayData cur_data) {
         inner_map[cur_data.cur_hash].server     = cur_data.server;
     }
 
+    if (m_opt.file_export) {
+        Display::write_srv_to_csv(cur_data);
+    }
     Display::render_srv_display();
+}
+
+void Display::write_srv_to_csv(DnsSrvDisplayData cur_data) {
+    QFile file(m_opt.filepath);
+    if (!file.open(QIODevice::Append | QIODevice::Text)) {
+        std::cerr << "File could not be opended: " << m_opt.filepath.toStdString() << std::endl;
+        return;
+    }
+
+    QStringList record_entry;
+    const auto& data = cur_data.cur_response;
+    for (const auto& rec : data) {
+        record_entry << QString("\"%1(%2, %3)\"").arg(rec.target()).arg(rec.priority()).arg(rec.timeToLive());
+    }
+
+    QStringList row = {
+        cur_data.cur_timestamp,
+        cur_data.server,
+        m_opt.dns_name,
+        record_entry.join(';')
+    };
+
+    QTextStream out (&file);
+    out << row.join(';') << "\n";
+    file.close();
 }

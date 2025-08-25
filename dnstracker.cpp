@@ -29,8 +29,6 @@
 #include <QDebug>
 #include <QDateTime>
 
-constexpr size_t SLEEP_INTERVALL = 60000;
-
 DnsTracker::DnsTracker(const Options& options, QObject *parent)
     : QObject(parent), m_options(options) {}
 
@@ -134,7 +132,7 @@ void DnsTracker::start_tracking() {
     }
 
     DnsTracker::change_member_values();
-    QTimer::singleShot(SLEEP_INTERVALL, this, &DnsTracker::run_lookup);
+    QTimer::singleShot(m_options.sleep_intervall, this, &DnsTracker::run_lookup);
 }
 
 /*Used for measurement between start and change-detection, currently not active*/

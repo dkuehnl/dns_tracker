@@ -21,12 +21,15 @@
 #include <QCoreApplication>
 #include <QTimer>
 #include <QDateTime>
+#include <QFile>
+#include <QFileInfo>
+#include <QDir>
 
 #include "dnstracker.h"
 #include "display.h"
 
 void print_help() {
-    std::cout << "DNS-Tracker v1.3" << std::endl;
+    std::cout << "DNS-Tracker v1.4" << std::endl;
     std::cout << "Usage: dns_tracker -t [TYPE] -s [IP] -n [NAME] [OPTION]" << std::endl;
     std::cout << "In standard-mode an dns-request is issued and the answer displayed." << std::endl;
     std::cout << "If -c for continues measurment is activated the same request will be send every 60 seconds until quit with STRG+C" << std::endl;
@@ -35,7 +38,8 @@ void print_help() {
     std::cout << "\t*-t DNS-TYPE (SRV, A)" << std::endl;
     std::cout << "\t*-s DNS-SERVER (IP-address)" << std::endl;
     std::cout << "\t*-n DNS-NAME" << std::endl;
-    std::cout << "\t[-c continues-measurment, pulls request every 60 seconds]" << std::endl;
+    std::cout << "\t--export=FILEPATH (for file-export)" << std::endl;
+    std::cout << "\t[-c SEC (continues-measurment, pulls request every 60 seconds if no value defined)]" << std::endl;
     std::cout << "\t[-v verbose-mode]" << std::endl;
     std::cout << "\t[-h show help]" << std::endl;
 }
@@ -43,13 +47,14 @@ void print_help() {
 int main(int argc, char *argv[])
 {
     Options opts;
-    const char* short_opts = "t:s:n:m:vch";
+    const char* short_opts = "t:s:n:m:c:vh";
     static struct option long_opts[] = {
         {"dns_type", required_argument, nullptr, 't'},
         {"dns_server", required_argument, nullptr, 's'},
         {"dns_name", required_argument, nullptr, 'n'},
+        {"continue", optional_argument, nullptr, 'c'},
+        {"export", optional_argument, nullptr, 'e'},
         {"verbose", no_argument, nullptr, 'v'},
-        {"continue", no_argument, nullptr, 'c'},
         {"help", no_argument, nullptr, 'h'},
         {nullptr, 0, nullptr, 0}
     };
@@ -74,7 +79,56 @@ int main(int argc, char *argv[])
             opts.verbose = true;
             break;
         case 'c':
+            if (optarg != nullptr) {
+                try {
+                    int sec = std::stoi(optarg);
+                    if (sec < 0) throw std::invalid_argument("negative value");
+                    opts.sleep_intervall = static_cast<size_t>(sec) * 1000;
+                } catch (const std::exception& e) {
+                    std::cerr << "Unsupported time-value for continues-mode: " << optarg << std::endl;
+                    return 1;
+                }
+            }
             opts.continue_measurment = true;
+            break;
+        case 'e':
+            if (optarg != nullptr) {
+                QString path = QString::fromUtf8(optarg);
+                QFileInfo file(path);
+
+                if (file.fileName().isEmpty()) {
+                    std::cerr << "Invalid export-path: No filename specified - " << optarg << std::endl;
+                    return 1;
+                }
+
+                QDir directory = file.dir();
+                if (!directory.exists()) {
+                    std::cerr << "Invalid export-path: directory does not exist - " << directory.absolutePath().toStdString() << std::endl;
+                    return 1;
+                }
+
+                if (file.exists()) {
+                    std::cerr << "Invalid export-path: file does already exist - " << file.absoluteFilePath().toStdString() << std::endl;
+                    return 1;
+                }
+                opts.filepath = file.absoluteFilePath();
+
+            } else {
+                const char* home = getenv("HOME");
+                if (home != nullptr) {
+                    opts.filepath = QString::fromUtf8(home) + "/dns_tracker_output.csv";
+
+                    QFileInfo file(opts.filepath);
+                    if (file.exists()) {
+                        std::cerr << "Invalid export-path: file does already exists - " << file.absoluteFilePath().toStdString() << std::endl;
+                        return 1;
+                    }
+                } else {
+                    std::cerr << "No valid home-path found, please check the env-variables" << std::endl;
+                    return 1;
+                }
+            }
+            opts.file_export = true;
             break;
         case 'h':
             opts.show_help = true;

@@ -66,6 +66,9 @@ private:
     void render_srv_display();
     void render_single_a();
     void render_single_srv();
+    void write_a_to_csv(DnsADisplayData cur_data);
+    void write_srv_to_csv(DnsSrvDisplayData cur_data);
+
 };
 
 #endif // DISPLAY_H

@@ -25,14 +25,18 @@
 #include <qobject.h>
 #include <QCoreApplication>
 #include <QDnsLookup>
+#include <QFile>
 
 struct Options {
     QString dns_type;
     QString dns_name;
     QString dns_server;
     QList<QString> multi_dns_server;
+    QString filepath;
+    size_t sleep_intervall = 60000;
     bool verbose = false;
     bool continue_measurment = false;
+    bool file_export = false;
     bool multi_requests = false;
     bool show_help = false;
 };
